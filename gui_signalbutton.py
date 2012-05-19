@@ -32,17 +32,14 @@ class SignalButton(ShapedButton):
         pub.subscribe(self.onStateDatagram, "signal.{}.stateDatagram".format(self.signalName))
 
     def onStateDatagram(self, datagram):
-        def threadsafe(datagram):
-            if datagram['signalError']:
-                self.startBlinking()
-            elif self.blinking:
-                self.stopBlinking()
-            self.state = datagram["state"]
-            if not self.blinking:
-                self.currentImg = self._stateMap[self.state]
-                self.Refresh()
-
-        wx.CallAfter(threadsafe, datagram)
+        if datagram['signalError']:
+            self.startBlinking()
+        elif self.blinking:
+            self.stopBlinking()
+        self.state = datagram["state"]
+        if not self.blinking:
+            self.currentImg = self._stateMap[self.state]
+            self.Refresh()
 
     def startBlinking(self):
         if not self.blinking:

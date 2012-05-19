@@ -5,6 +5,7 @@ import logging
 from wxLogHandler import WxLogHandler
 
 from pubsub import pub
+import threadsafepub as tpub
 
 
 
@@ -69,6 +70,7 @@ class MainFrame(wx.Frame):
     def onIdle(self, event):
         pass
         #logging.debug("IDLE")
+        tpub.poll()
 
 app = wx.App(redirect = 0)
 

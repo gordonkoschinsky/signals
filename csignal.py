@@ -1,4 +1,5 @@
 from pubsub import pub
+import threadsafepub as tpub
 from threading import Thread
 from threading import Lock
 import Pyro4
@@ -12,6 +13,8 @@ from signalexceptions import *
 Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a76da5c2394"
 #Pyro4.config.COMMTIMEOUT = 0.5
 #Pyro4.config.POLLTIMEOUT = 0.5
+
+
 
 class Signal(object):
     """
@@ -33,24 +36,16 @@ class Signal(object):
     their state to differ from the required one, the signal will notice and fall
     back to its safe state.
 
-    TODO:
-    - Thread safe pubsub:
-        - Make a threadSafePub Class with sendMessage() method
-        - Calls to this method append message/data to a queue
-        - The wx.frame gets an onIdle event handler that polls
-        the queue and publishs message/data via piubsub
-        So there is no need for callAfter() anywhere any longer.
-        The threadSafePub class can also handle GUI/logic communication if these
-        are seperated into processes later on (see below).
-    - Track diagram in the gui:
-    - Parser to send commands to the elements
-    - More elements: Switches, track occupancy indicators
-
     TODO: GUI SEPERATION:
     - Make main.py just setup all signals, no GUI
     - make main start a seperate thread with its own pyro server to take commands
     from the GUI process. The GUI process also polls status and error information
     via Pyro from main
+
+   TODO:
+    - Track diagram in the gui:
+    - Parser to send commands to the elements
+    - More elements: Switches, track occupancy indicators
 
 
     """
@@ -168,7 +163,7 @@ class Signal(object):
             self.pollState = self._remoteCall(self.ssignal.getState)
             self.logger.debug("Polling done")
             # Publish our state, regardless of pollState
-            pub.sendMessage("signal.{}.stateDatagram".format(self.name),
+            tpub.sendMessage("signal.{}.stateDatagram".format(self.name),
                             datagram= {
                                 "state":self.curState,
                                 "pollState":self.pollState,
@@ -322,7 +317,7 @@ class Signal(object):
         self._checkValidState(state)
         self.curState = state
         self.logger.info("Signal {} changed state to {}.".format(self.name, state))
-        pub.sendMessage("signal.{}.stateChanged".format(self.name), state=state)
+        tpub.sendMessage("signal.{}.stateChanged".format(self.name), state=state)
         self._remoteCall(self.ssignal.changeStateTo, self.curState)
 
     def _setError(self, exception):

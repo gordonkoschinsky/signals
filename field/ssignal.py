@@ -2,7 +2,7 @@
 Acts as "the actual real world signal". As such, it contains no logic, but
 just holds state and can change its state upon request.
 
-Listens to requests from the controller via Pyro4
+Listens to requests from the controller via RPyC
 
 If this signal were real and not just a representation of a real signal,
 the class would have to deal with the actual hardware to make sure the hardware
@@ -15,18 +15,26 @@ TODO: Add a watchdog thread (Timer?). If the signal is not polled every few
 seconds, fallback to save state.
 """
 
-import Pyro4
+import rpyc
+from rpyc.utils.server import ThreadedServer
+
 from time import sleep
 
 from pubsub import pub
-
-Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a76da5c2394"
-Pyro4.config.SERVERTYPE = "multiplex"
+import logging
 
 
-class Signal(object):
-    def __init__(self, name, states, defaultState, host="localhost"):
+
+
+class Signal(rpyc.Service):
+
+    ALIASES = [] # needed by RPyC
+
+    def __init__(self, conn, name, states, defaultState, host="localhost", *args, **kwargs):
+        rpyc.Service.__init__(self, conn, *args, **kwargs)
+
         self.name = name
+        self.ALIASES =[name,]
         self.host = host
 
         self.states = states
@@ -38,27 +46,27 @@ class Signal(object):
 
         self.daemonActive = True
 
-        # Create Pyro Daemon
-        daemon=Pyro4.Daemon(host=host)
-        nameserver=Pyro4.locateNS()
-        uri=daemon.register(self)
-        nameserver.register("signal.{}".format(self.name), uri)
+        #nameserver.register("signal.{}".format(self.name), uri)
 
-        pub.sendMessage("Signal.{}.daemon".format(self.name), daemon=daemon)
+        #pub.sendMessage("Signal.{}.daemon".format(self.name), daemon=daemon)
 
         # Run the server
-        daemon.requestLoop(self.serverActive)
+        #daemon.requestLoop(self.serverActive)
+        self.server = ThreadedServer(self, port = 18861, autoregister = True)
+        self.server.start()
 
-    def serverActive(self):
+
+
+    def exposed_serverActive(self):
         return self.daemonActive
 
-    def disconnect(self):
+    def exposed_disconnect(self):
         self.daemonActive = False
 
-    def getState(self):
+    def exposed_getState(self):
         return(self.currentState)
 
-    def changeStateTo(self, newState):
+    def exposed_changeStateTo(self, newState):
         if newState not in self.states:
            raise ValueError, "newState {} is not in the list of allowed states {}".format(newState, self.states)
 

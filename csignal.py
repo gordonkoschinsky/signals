@@ -1,7 +1,7 @@
 from pubsub import pub
 from threading import Thread
 from threading import Lock
-import Pyro4
+import RPyC
 
 import logging
 
@@ -9,9 +9,6 @@ from time import sleep
 
 from signalexceptions import *
 
-Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a76da5c2394"
-Pyro4.config.COMMTIMEOUT = 0.01
-Pyro4.config.POLLTIMEOUT = 0.5
 
 class Signal(object):
     """

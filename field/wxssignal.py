@@ -8,7 +8,7 @@ import wx
 import sys
 import ssignal
 import socket
-import Pyro4
+import rpyc
 from pubsub import pub
 
 class SsignalWrapper(ssignal.Signal):
@@ -21,10 +21,10 @@ class SsignalWrapper(ssignal.Signal):
         ssignal.Signal.__init__(*args, **kwargs)
 
     def getState(self):
-        try:
-            state = ssignal.Signal.getState(self)
-        except Pyro4.errors.TimeoutError:
-            pass
+        #try:
+        state = ssignal.Signal.getState(self)
+        #except Pyro4.errors.TimeoutError:
+        #    pass
         wx.CallAfter(pub.sendMessage, "ssignal.stateRequested", state=state)
         return state
 
@@ -42,7 +42,7 @@ class SketchFrame(wx.Frame):
         self.adressString = "-.-.-.-:-"
 
         # COMMUNICATION
-        self.signal = Pyro4.Proxy("PYRONAME:signal.{}".format(self.signalName))
+        self.signal = rpyc.connect("signal.{}".format(self.signalName))
 
         # WIDGETS
         self.panel = wx.Panel(self, wx.ID_ANY)
@@ -251,21 +251,28 @@ class SsignalThread(Thread):
 def createSignalRepresentation(name="S", host="localhost", **kwargs):
     app=wx.App(redirect=False)
 
-    frame=SketchFrame(parent=None, title=name, signalName=name, adressString = "{}:{}".format(host,"?"), **kwargs)
+    #frame=SketchFrame(parent=None, title=name, signalName=name, adressString = "{}:{}".format(host,"?"), **kwargs)
 
-    s = SsignalThread(name, ("Hp0","Ks1","Ks2"), "Hp0", host=host)
+    #s = SsignalThread(name, ("Hp0","Ks1","Ks2"), "Hp0", host=host)
+    s = SsignalWrapper(name, ("Hp0","Ks1","Ks2"), "Hp0", host=host)
 
-    frame.Show(True)
-    frame.ToggleWindowStyle(wx.STAY_ON_TOP)
+    #frame.Show(True)
+    #frame.ToggleWindowStyle(wx.STAY_ON_TOP)
 
     app.MainLoop()
 
 
 if __name__=='__main__':
-    # test case
-    import pyronameserver as pns
-    ns = pns.startNameServer(Pyro4.socketutil.getMyIpAddress(workaround127=True))
 
-    host = Pyro4.socketutil.getMyIpAddress(workaround127=True)
-    Pyro4.config.COMMTIMEOUT = 5
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+
+    #s = SsignalWrapper("S1", ["Hp0","Ks1"], "Hp0", "localhost")
+    #s = SsignalThread("S1", ("Hp0","Ks1","Ks2"), "Hp0", "localhost")
+    #exit()
+
+    # test case
+
+#    host = Pyro4.socketutil.getMyIpAddress(workaround127=True)
+    host = "localhost"
     createSignalRepresentation("S1", host=host)

@@ -5,6 +5,11 @@ from pubsub import pub
 import logging
 
 
+#import Pyro4
+#ns = Pyro4.locateNS()
+#ns.ping()
+
+
 
 import signalregistry
 
@@ -23,4 +28,7 @@ s2.configCompleted()
 #s2._setState("Ks1")
 #s2.locked = True
 
+#logging.debug("Signal setup completed")
+#import time
+#time.sleep(5)
 import gui_main

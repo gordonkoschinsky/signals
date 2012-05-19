@@ -43,6 +43,8 @@ class MainFrame(wx.Frame):
         # EVENTS
         button_S1green.Bind(wx.EVT_BUTTON, self.onS1green)
         button_S1reset.Bind(wx.EVT_BUTTON, self.onS1reset)
+        self.Bind(wx.EVT_IDLE, self.onIdle)
+
 
         self.Show()
 
@@ -56,7 +58,7 @@ class MainFrame(wx.Frame):
         handler = WxLogHandler(logCtrl)
         handler.setFormatter(logging.Formatter('%(levelname)s | %(name)s | %(message)s [@ %(asctime)s in %(filename)s:%(lineno)d]'))
         rootLogger.addHandler(handler)
-        rootLogger.debug("Logging initialized")
+        #rootLogger.debug("Logging initialized")
 
     def onS1green(self, event):
         pub.sendMessage("signal.S1.requestKs1")
@@ -64,6 +66,9 @@ class MainFrame(wx.Frame):
     def onS1reset(self, event):
         pub.sendMessage("signal.S1.requestReset")
 
+    def onIdle(self, event):
+        pass
+        #logging.debug("IDLE")
 
 app = wx.App(redirect = 0)
 

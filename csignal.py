@@ -10,8 +10,8 @@ from time import sleep
 from signalexceptions import *
 
 Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a76da5c2394"
-Pyro4.config.COMMTIMEOUT = 0.01
-Pyro4.config.POLLTIMEOUT = 0.5
+#Pyro4.config.COMMTIMEOUT = 0.5
+#Pyro4.config.POLLTIMEOUT = 0.5
 
 class Signal(object):
     """
@@ -35,11 +35,11 @@ class Signal(object):
 
     TODO:
     - Thread safe pubsub:
-        - Make a threadSafePub Class with sendMessag() method
+        - Make a threadSafePub Class with sendMessage() method
         - Calls to this method append message/data to a queue
         - The wx.frame gets an onIdle event handler that polls
         the queue and publishs message/data via piubsub
-        So there is no need for callAfter() anywhere anylonger.
+        So there is no need for callAfter() anywhere any longer.
         The threadSafePub class can also handle GUI/logic communication if these
         are seperated into processes later on (see below).
     - Track diagram in the gui:
@@ -93,7 +93,7 @@ class Signal(object):
 
         # the "real world" counterpart of this signal in the field
         self.ssignal = Pyro4.Proxy("PYRONAME:signal.{}".format(self.name))
-        self.ssignal._pyroTimeout = 0.1
+        self.ssignal._pyroTimeout = 1
 
 
         # register this signal in the registry
@@ -132,8 +132,9 @@ class Signal(object):
         self.pollingActive = True
         thread = Thread(target=self.pollSignalState)
         thread.setDaemon(True)
+        self.logger.debug("Watchdog thread starting...")
         thread.start()
-
+        self.logger.debug("Watchdog thread started")
         # SUBSCRIBE TO EVENTS
         pub.subscribe(self.onKs1Requested, "signal.{}.requestKs1".format(self.name))
         pub.subscribe(self.onResetRequested, "signal.{}.requestReset".format(self.name))
@@ -163,8 +164,9 @@ class Signal(object):
         """
         while self.pollingActive:
             sleep(1)
+            self.logger.debug("Polling state")
             self.pollState = self._remoteCall(self.ssignal.getState)
-
+            self.logger.debug("Polling done")
             # Publish our state, regardless of pollState
             pub.sendMessage("signal.{}.stateDatagram".format(self.name),
                             datagram= {
@@ -313,6 +315,7 @@ class Signal(object):
             response= self._setError(SignalFieldConnectionError("Nameserver not found."))
         except Exception as e:
             response = e
+        self.logger.debug("Response from remote call is {}".format(response))
         return response
 
     def _setState(self, state):

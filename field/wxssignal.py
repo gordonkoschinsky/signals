@@ -21,10 +21,10 @@ class SsignalWrapper(ssignal.Signal):
         ssignal.Signal.__init__(*args, **kwargs)
 
     def getState(self):
-        try:
-            state = ssignal.Signal.getState(self)
-        except Pyro4.errors.TimeoutError:
-            pass
+        #try:
+        state = ssignal.Signal.getState(self)
+        #except Pyro4.errors.TimeoutError:
+        #    pass
         wx.CallAfter(pub.sendMessage, "ssignal.stateRequested", state=state)
         return state
 

@@ -36,16 +36,6 @@ class Signal(object):
     their state to differ from the required one, the signal will notice and fall
     back to its safe state.
 
-    TODO: GUI SEPERATION:
-    - Make main.py just setup all signals, no GUI
-    - make main start a seperate thread with its own pyro server to take commands
-    from the GUI process. The GUI process also polls status and error information
-    via Pyro from main
-
-   TODO:
-    - Track diagram in the gui:
-    - Parser to send commands to the elements
-    - More elements: Switches, track occupancy indicators
 
 
     """

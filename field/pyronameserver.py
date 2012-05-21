@@ -2,7 +2,7 @@ from threading import Thread, Event
 from Pyro4 import naming
 
 class NameServer(Thread):
-    def __init__(self, hostname):
+    def __init__(self, hostname=None):
         super(NameServer,self).__init__()
         self.setDaemon(1)
         self.hostname=hostname
@@ -10,10 +10,10 @@ class NameServer(Thread):
 
     def run(self):
         # start the nameserver, it configures a broadcast server for us
-        self.uri, self.ns_daemon, self.bc_server = naming.startNS(self.hostname)
+        self.uri, self.ns_daemon, self.bc_server = naming.startNS(host=self.hostname)
         # start this broadcast server in its own thread
         self.bc_server.runInThread()
-        # signal the main thread that setup is sone
+        # signal the main thread that setup is done
         self.started.set()
         # serve away...
         self.ns_daemon.requestLoop()

@@ -4,6 +4,8 @@ import gui_raildiagram
 import logging
 from wxLogHandler import WxLogHandler
 
+import pyropub
+
 from pubsub import pub
 import threadsafepub as tpub
 
@@ -62,10 +64,10 @@ class MainFrame(wx.Frame):
         #rootLogger.debug("Logging initialized")
 
     def onS1green(self, event):
-        pub.sendMessage("signal.S1.requestKs1")
+        pyropub.sendMessage("signal.S1.requestKs1")
 
     def onS1reset(self, event):
-        pub.sendMessage("signal.S1.requestReset")
+        pyropub.sendMessage("signal.S1.requestReset")
 
     def onIdle(self, event):
         pass

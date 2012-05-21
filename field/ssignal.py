@@ -45,7 +45,7 @@ class Signal(object):
         nameserver.register("signal.{}".format(self.name), uri)
 
         pub.sendMessage("Signal.{}.daemon".format(self.name), daemon=daemon)
-
+        print "Signal {} set up.".format(self.name)
         # Run the server
         daemon.requestLoop(self.serverActive)
 

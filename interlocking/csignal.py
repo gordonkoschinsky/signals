@@ -1,5 +1,5 @@
 from pubsub import pub
-import threadsafepub as tpub
+from threadsafepub import pub as tpub
 from threading import Thread
 from threading import Lock
 import Pyro4
@@ -19,7 +19,7 @@ Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a7
 class Signal(object):
     """
     Represents the "logical" signal in the main process
-    The actual signal is a "dumb" process in "server mode", which cn be told to change its
+    The actual signal is a "dumb" process in "server mode", which can be told to change its
     state and will answer its state when asked.
 
     This logical signal holds the signal logic for interlocking etc.

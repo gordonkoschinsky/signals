@@ -25,7 +25,7 @@ Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a7
 
 logging.basicConfig(level=logging.DEBUG)
 
-logging.getLogger("").setLevel(logging.DEBUG)
+logging.getLogger("").setLevel(logging.INFO)
 
 logger = logging.getLogger("signals.main")
 logger.setLevel(logging.DEBUG)
@@ -48,10 +48,12 @@ logger.debug("Signal setup completed")
 class SignalServer(object):
     def __init__(self):
         ns = Pyro4.locateNS()
-        daemon = Pyro4.Daemon()
-        uri = daemon.register(self)
+        self.daemon = Pyro4.Daemon()
+        uri = self.daemon.register(self)
         ns.register("Signals.SignalServer", uri)
-        daemon.requestLoop()
+
+    def start(self):
+        self.daemon.requestLoop()
 
     def sendMessage(self, topic, **kwargs):
         logger.debug("Received message to send: {} {}".format(topic, kwargs))
@@ -59,4 +61,5 @@ class SignalServer(object):
 
 logger.debug("Starting signal server...")
 
-SignalServer()
+SignalServer().start()
+

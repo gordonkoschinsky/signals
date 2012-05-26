@@ -7,7 +7,7 @@ from wxLogHandler import WxLogHandler
 import pyropub
 
 from pubsub import pub
-import threadsafepub as tpub
+from threadsafepub import pub as tpub
 
 
 

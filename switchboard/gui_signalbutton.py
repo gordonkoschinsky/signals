@@ -1,16 +1,12 @@
 import wx
 from gui_shapedbutton import ShapedButton
 from pubsub import pub
-from gui_tools import getFullPath
+from gui_tools import getFullPath, checkBitmapOk
 
 class SignalButton(ShapedButton):
     def __init__(self, parent, signalName, **kwargs):
-        self.Hp0Img=wx.Bitmap(getFullPath(('reso','signal_red.png')))
-        self.Ks1Img=wx.Bitmap(getFullPath(('reso','signal_green.png')))
-
-        if not self.Hp0Img.IsOk():
-            import error_image
-            self.Hp0Img = error_image.getfatalErrorBitmap()
+        self.Hp0Img=checkBitmapOk(wx.Bitmap(getFullPath(('res','signal_red.png'))))
+        self.Ks1Img=checkBitmapOk(wx.Bitmap(getFullPath(('res','signal_green.png'))))
 
         self.EmptyImg=wx.wx.EmptyBitmapRGBA(self.Hp0Img.GetWidth(), self.Hp0Img.GetHeight(), 0, 0, 0, 0)
 

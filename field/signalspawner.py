@@ -9,7 +9,7 @@ import wxssignal
 import sys
 import Pyro4
 import pyronameserver as pns
-Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a76da5c2394"
+
 
 
 if __name__ == '__main__':

@@ -1,5 +1,4 @@
 from pubsub import pub
-from threadsafepub import pub as tpub
 from threading import Thread
 from threading import Lock
 import Pyro4
@@ -148,17 +147,16 @@ class Signal(object):
         Publishes a state datagram on every run via pubsub
         """
         while self.pollingActive:
-            sleep(1)
             self.logger.debug("Polling state")
             self.pollState = self._remoteCall(self.ssignal.getState)
             self.logger.debug("Polling done")
             # Publish our state, regardless of pollState
-            tpub.sendMessage("signal.{}.stateDatagram".format(self.name),
+            pub.sendMessage("signal.{}.stateDatagram".format(self.name),
                             datagram= {
                                 "state":self.curState,
-                                "pollState":self.pollState,
-                                "signalError":self.signalError,
-                                "errorException":self.errorException
+                                #"pollState":self.pollState,
+                                "signalError":self.signalError #,
+                                #"errorException":self.errorException
                             }
                             )
 
@@ -173,7 +171,7 @@ class Signal(object):
                 else:
                     # debugging, set state to the remote state
                     self.curState = self.pollState
-
+            sleep(1)
 
     def threatStateWatchdog(self, state):
         """Check if all threats for state 'state' are still in the required
@@ -183,7 +181,6 @@ class Signal(object):
         """
         self.logger.debug("Starting watchdog for state {}".format(state))
         while self.watchdogActive:
-            sleep(1)
             if not self.checkThreatSafeStateFor(state):
                 # at least one threat is not safe anymore: fallback to safe state
                 self.tlock.acquire()
@@ -192,6 +189,7 @@ class Signal(object):
                     self.watchdogActive = False
                 finally:
                     self.tlock.release()
+            sleep(1)
         self.logger.debug("Terminating watchdog for state {}".format(state))
 
     ############################################################################
@@ -296,8 +294,8 @@ class Signal(object):
             response = self._setError(SignalFieldConnectionError("Connection to remote signal timed out."))
         #except socket.ConnectionClosedError:
         #    self._setError(SignalFieldConnectionError("Connection closed by remote signal."))
-        except Pyro4.errors.NamingError:
-            response= self._setError(SignalFieldConnectionError("Nameserver not found."))
+        except Pyro4.errors.NamingError as e:
+            response= self._setError(SignalFieldConnectionError("Naming error: {}".format(e)))
         except Exception as e:
             response = e
         self.logger.debug("Response from remote call is {}".format(response))
@@ -307,7 +305,7 @@ class Signal(object):
         self._checkValidState(state)
         self.curState = state
         self.logger.info("Signal {} changed state to {}.".format(self.name, state))
-        tpub.sendMessage("signal.{}.stateChanged".format(self.name), state=state)
+        pub.sendMessage("signal.{}.stateChanged".format(self.name), state=state)
         self._remoteCall(self.ssignal.changeStateTo, self.curState)
 
     def _setError(self, exception):

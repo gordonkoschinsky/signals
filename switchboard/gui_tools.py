@@ -1,3 +1,7 @@
+"""
+some tools to help with the GUI
+"""
+
 import sys
 import os.path
 import __builtin__
@@ -11,3 +15,14 @@ def getFullPath(pathList):
     """
     fullpath = os.path.join(homepath, *pathList)
     return fullpath
+
+def checkBitmapOk(bmp):
+    """
+    If the isOk() method of the bitmap 'bmp' returns false,
+    change bmp to be  the "fatal error" bitmap
+    returns the original bmp or the error bmp
+    """
+    if not bmp.IsOk():
+        import error_image
+        bmp = error_image.getfatalErrorBitmap()
+    return bmp

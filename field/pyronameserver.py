@@ -1,5 +1,8 @@
 from threading import Thread, Event
 from Pyro4 import naming
+import Pyro4
+
+Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a76da5c2394"
 
 class NameServer(Thread):
     def __init__(self, hostname=None):
@@ -24,3 +27,15 @@ def startNameServer(host):
     ns.start()
     ns.started.wait()
     return ns
+
+
+if __name__ == "__main__":
+    # Stand-alone nameserver
+    import sys
+
+    ns = startNameServer(Pyro4.socketutil.getMyIpAddress(workaround127=True))
+    print "Nameserver started at {}".format(ns.uri)
+    print "Broadcastserver started at {}".format(ns.bc_server.locationStr)
+    sys.stdout.flush()
+
+    ns.join()

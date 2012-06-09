@@ -4,11 +4,13 @@ import gui_raildiagram
 import logging
 from wxLogHandler import WxLogHandler
 
-import pyropub
+import interlockingcom
 
 from pubsub import pub
 from threadsafepub import pub as tpub
 
+import Pyro4
+Pyro4.config.HMAC_KEY = "eea80c6848ddc1f78b37d882b5f837b32064e847a7cb82b54a459a76da5c2394"
 
 
 
@@ -64,13 +66,12 @@ class MainFrame(wx.Frame):
         #rootLogger.debug("Logging initialized")
 
     def onS1green(self, event):
-        pyropub.sendMessage("signal.S1.requestKs1")
+        interlockingcom.sendMessage("signal.S1.requestKs1")
 
     def onS1reset(self, event):
-        pyropub.sendMessage("signal.S1.requestReset")
+        interlockingcom.sendMessage("signal.S1.requestReset")
 
     def onIdle(self, event):
-        pass
         #logging.debug("IDLE")
         tpub.poll()
 

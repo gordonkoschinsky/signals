@@ -1,0 +1,2 @@
+- Status field in switchboard: Display connection status to interlocking server
+- transport signal exceptions via pyro: as a string representation?

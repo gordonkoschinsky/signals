@@ -52,7 +52,7 @@ class InterlockingCom(object):
                     except Pyro4.errors.CommunicationError:
                         self.interlocking = None
                 else:
-                    # Try to reestablish connection to A
+                    # Try to reestablish connection to interlocking server
                     self.logger.debug("Trying to reestablish connection to interlocking server...")
                     try:
                         self.interlocking = Pyro4.Proxy(self.interlocking_pyroname)
@@ -61,6 +61,12 @@ class InterlockingCom(object):
                     except Pyro4.errors.PyroError:
                         self.logger.debug("Unsuccessfully tried to reestablish connection to interlocking server.")
                         self.interlocking = None
+
+                if self.interlocking:
+                    tpub.sendMessage("InterlockingCom.connection.established")
+                else:
+                    tpub.sendMessage("InterlockingCom.connection.error")
+
                 time.sleep(self.pingInterval)
 
         def eventLoop():
@@ -81,5 +87,3 @@ _interlockingCom = InterlockingCom(switchboardUUID)
 sendMessage = _interlockingCom.sendMessage
 
 _interlockingCom.run()
-
-

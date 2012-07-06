@@ -1,14 +1,18 @@
 import wx
 from gui_shapedbutton import ShapedButton
 from pubsub import pub
-from gui_tools import getFullPath, checkBitmapOk
+from gui_tools import getScaledBitmap, scaleBitmap
+import error_image
 
 class SignalButton(ShapedButton):
     def __init__(self, parent, signalName, **kwargs):
-        self.Hp0Img=checkBitmapOk(wx.Bitmap(getFullPath(('res','signal_red.png'))))
-        self.Ks1Img=checkBitmapOk(wx.Bitmap(getFullPath(('res','signal_green.png'))))
+        self.width = 25
+        self.height = 10
 
-        self.EmptyImg=wx.wx.EmptyBitmapRGBA(self.Hp0Img.GetWidth(), self.Hp0Img.GetHeight(), 0, 0, 0, 0)
+        self.Hp0Img=getScaledBitmap(('res','signal_red.png'), self.width, self.height)
+        self.Ks1Img=getScaledBitmap(('res','signal_green.png'), self.width, self.height)
+
+        self.EmptyImg=wx.wx.EmptyBitmapRGBA(self.width, self.height, 0, 0, 0, 0)
 
         super(SignalButton, self).__init__(parent, self.EmptyImg, pressedImg=None, disabledImg=None, **kwargs)
         # Start with an empty image unless state information is received
@@ -19,7 +23,7 @@ class SignalButton(ShapedButton):
         self.state = None
 
         self._stateMap = {
-                        None:self.EmptyImg,
+                        None:scaleBitmap(error_image.getfatalErrorBitmap(), self.width, self.height),
                         "Hp0":self.Hp0Img,
                         "Ks1":self.Ks1Img,
                         "Ks2":None
@@ -29,6 +33,10 @@ class SignalButton(ShapedButton):
         self.blinkTimer = wx.Timer(self, TIMER_ID)
         self.Bind(wx.EVT_TIMER, self.onBlinkTimer, self.blinkTimer)
         self.Bind(wx.EVT_BUTTON, self.onClicked)
+
+        # Until the first state datagream arrives, the signal state is unknown
+        # and the button thus blinking
+        self.startBlinking()
 
         pub.subscribe(self.onStateDatagram, "signal.{}.stateDatagram".format(self.signalName))
 

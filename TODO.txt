@@ -1,4 +1,6 @@
-- Status field in switchboard: Display connection status to interlocking server
-   - tpub interlocking connection state and change status bar upon catch of the message
-   - NOTA BENE: Should we introduce a presenter layer at this point? 
+
+
+! ARCHITECTURE
+
+- NOTA BENE: Should we introduce a presenter layer at this point?
 - transport signal exceptions via pyro: as a string representation?

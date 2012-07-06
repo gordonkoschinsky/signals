@@ -33,8 +33,6 @@ class MainFrame(wx.Frame):
         self.sb = gui_statusbar.SwitchboardStatusBar(parent=self, fieldCount=3)
         self.SetStatusBar(self.sb)
 
-        self.sb.SetStatusBackground("red", 2)
-
         # SIZERS
         topSizer = wx.BoxSizer(wx.VERTICAL)
 

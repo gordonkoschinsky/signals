@@ -9,24 +9,23 @@ import wx
 
 class ShapedButton(wx.PyControl):
     def __init__(self, parent, normalImg, pressedImg=None, disabledImg=None, **kwargs):
-        super(ShapedButton, self).__init__(parent, -1, style=wx.BORDER_NONE |
-                                                            wx.TAB_TRAVERSAL,
+        super(ShapedButton, self).__init__(parent, wx.ID_ANY, style=wx.BORDER_NONE |
+                                                            wx.WANTS_CHARS,
                                                             **kwargs)
 
         self.normal = normalImg
         self.pressed = pressedImg
         self.disabled = disabledImg
         self.currentImg = normalImg
-        self.region = wx.RegionFromBitmapColour(normalImg, wx.Color(0, 0, 0, 0))
+        self.region = self.GetClickRegion(normalImg)
 
         # take the image size as client size, leave 3 pixel at each side for the focus border
         w, h = self.normal.GetSize()
-        self.SetClientSize((w+6, h+6))
+        self.borderThickness = 3
+        self.SetClientSize((w+self.borderThickness*2, h+self.borderThickness*2))
 
         self._clicked = False
         self._hasFocus = False
-
-
 
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
@@ -37,12 +36,28 @@ class ShapedButton(wx.PyControl):
         self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.Bind(wx.EVT_MOTION, self.on_motion)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave_window)
+        self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+        self.Bind(wx.EVT_KEY_UP, self.on_key_up)
 
         self.Bind(wx.EVT_SET_FOCUS, self.on_focus)
         self.Bind(wx.EVT_KILL_FOCUS, self.on_loseFocus)
 
+
+
+    def GetClickRegion(self, bitmap):
+        """ build the clickable region, use mask if available, else black as transparent color
+        """
+        if bitmap.GetMask():
+            region = wx.RegionFromBitmap(bitmap)
+        else:
+            region = wx.RegionFromBitmapColour(bitmap, wx.Color(0, 0, 0, 0))
+        return region
+
     def DoGetBestSize(self):
         return self.normal.GetSize()
+
+    def GetDefaultAttributes(self):
+        return wx.Button.GetClassDefaultAttributes()
 
     def Enable(self, *args, **kwargs):
         super(ShapedButton, self).Enable(*args, **kwargs)
@@ -66,6 +81,7 @@ class ShapedButton(wx.PyControl):
 
     def on_focus(self, event):
         self._hasFocus = True
+        self.Refresh()
 
     def on_loseFocus(self, event):
         self._hasFocus = False
@@ -77,15 +93,27 @@ class ShapedButton(wx.PyControl):
 
     def on_paint(self, event):
         dc = wx.AutoBufferedPaintDC(self)
-        dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
-        dc.Clear()
+
+        # Get the panel background if it supports it (SkinPanel does),
+        # otherwise just use the parent's background color
+        if hasattr(self.GetParent(), "GetBackgroundRect") and self.GetRect():
+            backgroundBitmap = self.GetParent().GetBackgroundRect(self.GetRect())
+            dc.DrawBitmap(backgroundBitmap, 0, 0, False)
+        else:
+            brush = wx.Brush(self.GetParent().GetBackgroundColour())
+            dc.SetBackground(brush)
+            dc.Clear()
+
+
+        #dc.SetBackground(wx.Brush(self.GetParent().GetBackgroundColour()))
+        #dc.Clear()
         bitmap = self.currentImg
 
         if self.clicked:
             bitmap = self.pressed or bitmap
         if not self.IsEnabled():
             bitmap = self.disabled or bitmap
-        dc.DrawBitmap(bitmap, 3, 3) # 3 pixel offset for focus border
+        dc.DrawBitmap(bitmap, self.borderThickness, self.borderThickness, useMask=True)
 
         if self._hasFocus:
             w, h = self.GetClientSize()
@@ -106,7 +134,7 @@ class ShapedButton(wx.PyControl):
 
     def on_left_down(self, event):
         x, y = event.GetPosition()
-        if self.region.Contains(x, y):
+        if self.region.Contains(x-self.borderThickness, y-self.borderThickness):
             self.clicked = True
 
     def on_left_dclick(self, event):
@@ -115,43 +143,71 @@ class ShapedButton(wx.PyControl):
     def on_left_up(self, event):
         if self.clicked:
             x, y = event.GetPosition()
-            if self.region.Contains(x, y):
+            if self.region.Contains(x-self.borderThickness, y-self.borderThickness):
                 self.post_event()
         self.clicked = False
 
     def on_motion(self, event):
         if self.clicked:
             x, y = event.GetPosition()
-            if not self.region.Contains(x, y):
+            if not self.region.Contains(x-self.borderThickness, y-self.borderThickness):
                 self.clicked = False
 
     def on_leave_window(self, event):
         self.clicked = False
 
+    def on_key_down(self, event):
+        key = event.GetKeyCode()
+
+        # TODO: Add support for arrow key nagivatio
+        if key == wx.WXK_TAB:
+            flags = 0
+            if not event.ShiftDown(): flags |= wx.NavigationKeyEvent.IsForward
+            if event.CmdDown():       flags |= wx.NavigationKeyEvent.WinChange
+            self.Navigate(flags)
+        elif key == wx.WXK_SPACE:
+            self.clicked = True
+        else:
+            event.Skip()
+
+    def on_key_up(self, event):
+        key = event.GetKeyCode()
+
+        if key == wx.WXK_SPACE:
+            self.clicked = False
+            self.post_event()
+        else:
+            event.Skip()
 
 
+# -------------------------------------------------------------------------------
 def demo():
+    import gui_tools
     def on_button(event):
         print 'Button was clicked.'
 
     app = wx.PySimpleApp()
     frame = wx.Frame(None, -1, 'Shaped Button Demo')
-    import wx.lib.scrolledpanel as scrolled
-    panel = scrolled.ScrolledPanel(frame, -1)
-    panel.SetupScrolling()
+    panel = gui_tools.SkinPanel(frame)
+    panel.SetBitmap(wx.Bitmap("C:/Users/gordon/Pictures/Kanada/P1010275.JPG_cellsize.png"), style = gui_tools.SkinPanel.STRETCHED)
+
+    normalBMP = wx.Bitmap('C:/Users/gordon/Documents/Coding/Signals/src/switchboard/res/shape.png')
+    pressedBMP = wx.Bitmap('C:/Users/gordon/Documents/Coding/Signals/src/switchboard/res/shape_p.png')
 
     button = ShapedButton(panel,
-        wx.Bitmap("C:\\Users\\gordon\\Documents\\Coding\\Signals\\res\\shape.png"),
-        #wx.Bitmap('C:\Users\gordon\Documents\Coding\Signals\res\shape_p.png'),
+        normalBMP,
+        pressedBMP,
         pos=(60,20))
 
-    button.Bind(wx.EVT_BUTTON, on_button)
+    button2 = ShapedButton(panel,
+        normalBMP,
+        pressedBMP,
+        pos=(160,30))
 
-    #sizer = wx.BoxSizer(wx.VERTICAL)
-    #sizer.AddStretchSpacer(1)
-    #sizer.Add(button, 0, wx.ALIGN_CENTER)
-    #sizer.AddStretchSpacer(1)
-    #panel.SetSizer(sizer)
+    wx.Button(panel, pos=(0,0))
+    wx.Button(panel, pos=(0,30))
+
+    button.Bind(wx.EVT_BUTTON, on_button)
 
     frame.Show()
     app.MainLoop()

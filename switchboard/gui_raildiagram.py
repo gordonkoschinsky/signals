@@ -41,7 +41,7 @@ class RailDiagram(wx.Panel):
         dc.SetPen(pen)
         dc.SetBrush(wx.Brush('black'))
 
-        #dc.DrawPolygon(((0,cs),(0,hs),(ws,hs),(ws,cs),(ws-cs,0),(cs,0)), xoffset=soffsetx, yoffset=soffsety)
+        dc.DrawPolygon(((0,cs),(0,hs),(ws,hs),(ws,cs),(ws-cs,0),(cs,0)), xoffset=soffsetx, yoffset=soffsety)
 
         dc.SetFont(wx.Font(16, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         text = "Sometext"

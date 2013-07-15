@@ -1,6 +1,0 @@
-
-
-! ARCHITECTURE
-
-- NOTA BENE: Should we introduce a presenter layer at this point?
-- transport signal exceptions via pyro: as a string representation?
